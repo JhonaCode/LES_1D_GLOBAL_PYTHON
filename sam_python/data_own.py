@@ -12,6 +12,9 @@ import xarray as xr
 # To save the time coordinate in specific format 
 from    cftime import num2date, num2pydate
 
+import pandas as pd
+
+
 def data_load_xr(path,name,calendar):
 
     exp            =  xr.open_dataset(path, engine='netcdf4')
@@ -41,6 +44,60 @@ def data_load_xr(path,name,calendar):
     exp['time']=exp.ltime.values
     exp['ltime']=time
 
+    #exp['ltime']==exp.ltime.values
+
+    #exp['ltime']=exp.ltime.values
+
+    return exp 
+
+def data_load_scam_xr(path,name,UTC):
+
+    exp            =  xr.open_dataset(path, engine='netcdf4')
+
+    # To remove the column, that have lenght 1
+    exp         = exp.squeeze()
+
+    exp['name']    =  name
+
+    #exp['BR']   =  exp['SHF']/exp['LHF']
+
+    #exp['netsf']   =  exp['SWNS']-exp['LWNS']
+    #exp['netsf_dw']=  exp['SWDS']-exp['LWDS']
+
+    ltime = exp.time + dt.timedelta(hours=UTC)
+
+    exp['ltime']   =  ltime 
+
+
+    #Calculated the pressure levels from 
+    #the hybrid sigma-pressure vertical coordinate  
+    #P0 = 100000.0  # Pa
+    #pressure = (
+    #    exp["hyam"] * P0
+    #    + exp["hybm"] * exp["PS"]
+    #) / 100.0      # hPa    
+    #print(exp.lev[0:10])
+    #print(pressure[0:10])
+    #It is not necessary, lev variable is it!!!
+    #exit()
+
+    #date_format = '%Y%m%d%H'
+    ##to add the minutes to the original date
+    #dis=date[0]#+'00'
+    #dfs=date[1]#+'00'
+    #di=dt.datetime.strptime(dis, date_format)
+    #df=dt.datetime.strptime(dfs, date_format)
+
+    ##initial hour
+    #hi=di.hour
+    ##final hour
+    #hf=df.hour
+    #time=exp.time.values
+
+
+    #does not change the time 
+    #exp['time']=exp.ltime.values
+    #exp['ltime']=time
     #exp['ltime']==exp.ltime.values
 
     #exp['ltime']=exp.ltime.values
@@ -99,8 +156,8 @@ def data_ind(idi,data):
         if data[i]>=idi and b1==0: 
             ni =i  
             b1 =1
-            print("Date found:")
-            print("Data1:", data[i],i)
+            #print("Date found:")
+            #print("Data1:", data[i],i)
 
     return ni
 
@@ -132,14 +189,14 @@ def data_n(idi,idf,data):
         if data[i]>=idi and b1==0: 
             ni =i  
             b1 =1
-            print("From:")
-            print("Data1:", data[i],i)
+            #print("From:")
+            #print("Data1:", data[i],i)
 
         if data[i]>=idf and b2==0:  
             nf =i  
             b2 =1
-            print("To:")
-            print("Data2:", data[i],i) 
+            #print("To:")
+            #print("Data2:", data[i],i) 
     if nf==0:
 
         nf=data.shape[0]-1
@@ -240,48 +297,61 @@ def data_n_goa(idi,idf,data):
 #same reference hours, to plot in the same 
 #graph
 
-def data_to_reference(date,month_0,day_0,year): 
+def data_to_reference(date,date0): 
 
-    month   =   date.dt.month
-    day     =   date.dt.day
-    hour    =   date.dt.hour 
-    minute  =   date.dt.minute 
-    second  =   date.dt.second 
-    micro   =   date.dt.microsecond
+    try:
+        month   =   date.dt.month
+        day     =   date.dt.day
+        hour    =   date.dt.hour 
+        minute  =   date.dt.minute 
+        second  =   date.dt.second 
+        micro   =   date.dt.microsecond
 
+    except:
+        month   =   date.month
+        day     =   date.day
+        hour    =   date.hour 
+        minute  =   date.minute 
+        second  =   date.second 
+        micro   =   date.microsecond
+    
 
-    data_ref =   dt.datetime( year ,month_0,day_0,hour,minute, second,micro)
+    data_ref =   dt.datetime( date0[2],date0[1],date0[0],hour,minute, second,micro)
 
-    return data_ref,day.values 
+    return data_ref#,day.values 
 
-def data_to_reference_vector(data,month_0,day_0,year):
+def data_to_reference_vector(data,date0):
 
     i=0
 
     #to change the month, if 0 does change
-    day_ant=0
+    day_ant=-1
 
 
     data_ref=[]
+
+
     for d in data:
 
-        month   =   d.dt.month
-        day     =   d.dt.day
-        hour    =   d.dt.hour
-        minute  =   d.dt.minute
-        second  =   d.dt.second
-        micro   =   d.dt.microsecond
+        
+        month   =   int(d.dt.month)
+        day     =   int(d.dt.day)
+        hour    =   int(d.dt.hour)
+        minute  =   int(d.dt.minute)
+        second  =   int(d.dt.second)
+        micro   =   int(d.dt.microsecond)
 
-        if day_ant==day+1:
-
-            day_0+=1
+        if day==day_ant+1:
+            date0[0]+=1
+        #print(day_0)
 
         #data_ref[i] =   dt.datetime( year ,month_0,day_0,hour,minute, second,micro)
-        data_ref.append(dt.datetime( year ,month_0,day_0,hour,minute, second,micro))
+        data_ref.append(dt.datetime( date0[2],date0[1],date0[0],hour,minute, second,micro))
 
         day_ant = day
+        #kday_ant =   int(d.dt.day)
 
-        i=i+1
+        i+=1
 
     return data_ref
 

@@ -118,16 +118,15 @@ def diurnal_tke_budget_xr(exp,hour,date,name=[],explabel1=[],explabel2=[],alt=[]
         fig  = plt.figure()
         ax   = plt.axes()
 
-
-        figs,ax = main_plot_hour(fig,ax,data2,hour,z,altu,['blue',[1,0]]        , 'S' )
-        figs,ax = main_plot_hour(fig,ax,data3,hour,z,altu,['red' ,[1,1]]        , 'B' )
-        figs,ax = main_plot_hour(fig,ax,data4,hour,z,altu,['cyan',[1,0]      ]  , 'T' )
-        figs,ax = main_plot_hour(fig,ax,data5,hour,z,altu,['magenta',[2,1] ], 'P' )
-        figs,ax = main_plot_hour(fig,ax,data6,hour,z,altu,['green',[1,0]     ]  , 'D' )
+        figs,ax = main_plot_hour(fig,ax,data3,hour,z,altu,['orange' ,[1,0]]        , 'B' )
+        figs,ax = main_plot_hour(fig,ax,data5,hour,z,altu,['green',[2,1] ], 'P' )
+        figs,ax = main_plot_hour(fig,ax,data4,hour,z,altu,['purple',[1,0]      ]  , 'T' )
+        figs,ax = main_plot_hour(fig,ax,data6,hour,z,altu,['blue',[2,1]     ]  , 'D' )
+        figs,ax = main_plot_hour(fig,ax,data2,hour,z,altu,['black',[1,0]]        , 'S' )
 
         plt.axis([limu[0],limu[1],altu[0],altu[1]])
 
-        plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0),useMathText=True)
+        #plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0),useMathText=True)
 
         
         #locatormax = interval=10)
@@ -136,13 +135,109 @@ def diurnal_tke_budget_xr(exp,hour,date,name=[],explabel1=[],explabel2=[],alt=[]
         ax.xaxis.set_major_locator(MultipleLocator(limu[2]))
 
 
-        ax=label_plots(ax,leg_locu,explabel1u,explabel2u,tama)
+        ax=label_plots(ax,leg_locu,explabel1u,explabel2u,tama-1)
 
         label="%s_%s"%(name,hour)
 
         plt.savefig('%s/tke_buget_%sh.pdf'%(pars.out_fig,label),bbox_inches='tight',dpi=200, format='pdf')
 
         k+=1
+
+    if show:
+
+        plt.show()
+
+    plt.close('all')
+
+    return 
+
+def profile_var_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],explabel3=[],alt=[],lim=[],var_to=[],color=[],line=[],leg_loc=[],diurnal=[],show=[]): 
+
+    j=0
+    for var in variables:
+    
+        print("___________________")
+        print("%s"%(var))
+        print("___________________")
+
+
+        plot_defu=df.default_plot_diurnal(leg_loc,j)
+
+        size_wg = plot_defu[0]
+        size_hf = plot_defu[1]
+        cmm     = plot_defu[2]
+
+        tama=pp.plotsize(size_wg,size_hf,cmm,'diurnal')
+
+        #To plot 
+        fig  = plt.figure()
+        ax   = plt.axes()
+
+
+        limu,altu,var_tou,coloru,explabel1u,explabel3u,leg_locu,diurnalu,showu,lineu=df.default_values_sam_diurnal(exp[0],var,exp[0].z,lim,alt,var_to,color,explabel1,explabel3,leg_loc,diurnal,show,-1,j,line)
+
+
+        name='%s'%(var)
+
+        k=0
+        for ex in exp:
+
+            print("___________________")
+            print("__%s__"%(ex.name))
+            print("___________________")
+
+            date_format = '%Y-%m-%dT%H'
+            datei=dt.datetime.strptime(date[k][0], date_format)
+            datef=dt.datetime.strptime(date[k][1], date_format)
+
+            time1 = np.datetime64(date[k][0]) 
+            time2 = np.datetime64(date[k][1])
+
+            ni,nf=down.data_n(time1,time2,ex.time.values) 
+            #print(time1,ni)
+
+            tovar= ex.sel(time=ex.time[ni])
+
+            #if name:
+            name    =   name+'_'+str(ex.name.values)#+'_'+dates[0]
+
+            #Its no necessary to calculate de height
+            z=ex.z.values/1000.0
+
+            data=tovar[var]*var_tou
+
+            #cass_3=tovar['QV']-2.5
+            #if var=="QV" and k==2:
+            #        
+            #    plt.plot(cass_3,z,color='orange',dashes=[3,1],label=r'q-2.5 gkg$^{-1}$')
+
+            plt.plot(data,z,color=coloru[k],dashes=lineu[k],label=explabel2[k])
+
+
+            k+=1
+
+
+        ax=label_plots(ax,leg_locu,explabel1u,explabel3u,tama)
+
+        ax.set_ylim([altu[0],altu[1]])
+        #ax.set_xlim([limu[0],limu[1]])
+
+        if lim:
+
+            #plt.axis([lim[0],lim[1],alt[0],alt[1]])
+            ax.set_xlim(limu[0],limu[1])
+            ax.xaxis.set_major_locator(MultipleLocator(limu[2]))
+
+        #ax.set_ylim(alt[0],alt[1])
+        #def label_plots(ax,legend,explabel,xlabel): 
+        ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+
+        plt.savefig('%s/diurnal_%s.pdf'%(pars.out_fig,name),bbox_inches='tight',dpi=200, format='pdf')
+
+
+        plt.show()
+
+        j+=1
 
     if show:
 
@@ -201,6 +296,8 @@ def diurnal_var_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],expl
 
             tovar= ex.sel(time=slice(ex.time[ni],ex.time[nf]))
 
+            #print(tovar.time[0].values,ni,nf)
+
             #if name:
             name    =   name+'_'+str(ex.name.values)#+'_'+dates[0]
 
@@ -222,7 +319,6 @@ def diurnal_var_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],expl
                 htp=[]
 
             fig,ax = main_plot_var(fig,ax,data,ch,htp,hours,z,altu,limu,coloru[k],lineu[k],name,explabel2[k],leg_locu,diurnalu[1])
-
 
             k+=1
 
@@ -377,7 +473,7 @@ def main_plot_hour(fig,ax,data,hour,z,alt,color,explabel):
     #mean diurnal function 
     meanvar,time_h = diurnal_main(data,z,hour,hour,ch=1)
 
-    plt.plot(meanvar[0,:] ,z[:]/1000.0,label='%s'%(explabel),color=color[0],linewidth=1.0,alpha=1.0,dashes=color[1])
+    plt.plot(meanvar[0,:] ,z[:]/1000.0,label='%s'%(explabel),color=color[0],linewidth=1.5,alpha=1.0,dashes=color[1])
     #plt.plot(meanvar[0,:] ,z[:]/1000.0,color=color,linewidth=1.0,alpha=1.0,dashes=[1,0])
 
 
@@ -408,14 +504,14 @@ def main_plot_var(fig,ax,data,ch,hours,date,z,alt,lim,color,line,name,explabel,l
                     
                     if hour[j]==hours[jj]:
             
-                        plt.plot(meanvar[j,:] ,z[:]/1000.0,label=r'%s'%(explabel),color=color,linewidth=1.0,alpha=1.0,dashes=line)
+                        plt.plot(meanvar[j,:] ,z[:]/1000.0,label=r'%s'%(explabel),color=color,linewidth=1.5,alpha=1.0,dashes=line)
 
         else:
                 
             j=0
             for h in range(0,hf-hi,ch):
             
-                plt.plot(meanvar[j,:] ,z[:]/1000.0,label=r'%s'%(explabel),color=color,linewidth=1.0,alpha=1.0,dashes=line)
+                plt.plot(meanvar[j,:] ,z[:]/1000.0,label=r'%s'%(explabel),color=color,linewidth=1.5,alpha=1.0,dashes=line)
                 j+=1
 
     if lim:

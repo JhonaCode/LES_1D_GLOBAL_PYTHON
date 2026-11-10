@@ -192,23 +192,24 @@ def default_plot(plot_def,k):
 def default_values_1d_new(ex,vname,lim,alt,var_to,color,explabel1,explabel2,plot_def,show,k,j): 
 
     name    =   str(ex.name.values)#+'_'+dates[0]
-    maxv=np.min(ex[vname].values)#.max
-    minv=np.max(ex[vname].values)#.min
+    maxv=np.nanmin(ex[vname].values)#.max
+    minv=np.nanmax(ex[vname].values)#.min
 
-    maxh=np.min(ex.time.values)#.max
-    minh=np.max(ex.time.values)#.min
+    maxh=np.nanmin(ex.time.values)#.max
+    minh=np.nanmax(ex.time.values)#.min
 
     interval_x=4
     interval_y=int(maxv/4)
+
     #maxt=np.max(0)
     #mint=np.min(len(ex.nc_f[var]))
     #lim1.append([mint,maxt,interval_x])
-
+    #print(lim[j][0],maxh,minh)
 
     if not lim:
         lim=[minh,maxh,interval_x]
     else:
-        lim=[lim[j][0],lim[j][1],lim[j][2]] 
+        lim=[lim[0],lim[1],lim[2]] 
 
     if not alt:
         alt=[minv,maxv,interval_y]        

@@ -10,6 +10,8 @@ import  matplotlib          as mpl
 
 import  matplotlib.pyplot   as plt
 
+import matplotlib.ticker as ticker
+
 # Python standard library datetime  module
 import  datetime as dt  
 
@@ -35,6 +37,7 @@ import seaborn as sns
 
 import  sam_python.plotparameters      as pp
 
+from    cftime import num2date, num2pydate
 
 #to cp the parametres defaul 
 subprocess.run('cp Parameters_default.py /pesq/dados/bamc/jhonatan.aguirre/git_repositories/MAPS_python/sam_python/', shell = True, executable="/bin/bash")
@@ -374,7 +377,6 @@ def mean_box_var_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key
 
     if temporal is None: temporal = []
 
-
     if temporal: 
 
         goamz_all,binned_amz=group_by_hour_goamz_xr(temporal[0],temporal[1])
@@ -471,7 +473,7 @@ def mean_box_var_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key
             #sns.pointplot(data=toboxall_amz, x='time_str', y=var_amz,dodge=True, join=False)#3, notch=False, showcaps=False, width=0.5,linewidth='1',
             plt1=sns.pointplot(data=tobox, x='time_str', y=var_amz ,dodge=True, join=False, linewidth=0.1,color='blue',markers=['*'],markerssize=[0.2] ,errorbar=None,ci=None,line_kws={"alpha": 0.5},scatter_kws={"alpha": 0.5})    # markers)#3, notch=False, showcaps=False, width=0.5,linewidth='1',
 
-            plt.setp(plt1.collections, alpha=0.3)  # For markers
+            #plt.setp(plt1.collections, alpha=0.3)  # For markers
 
         ax.set_ylim([altu[0],altu[1]])
 
@@ -482,7 +484,7 @@ def mean_box_var_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key
         plt.grid(True, axis="y", linestyle="--", alpha=0.6)
         plt.show()
 
-        exit()
+        #exit()
 
         fig_label='les_var_box_plot'+'_'+var+'_'+key
 
@@ -748,6 +750,7 @@ def mean_box_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],
 
     var_amz=[]
     k=0
+
     for name, group in binned_amz:
 
         #if k>2:
@@ -840,25 +843,34 @@ def mean_box_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],
     #medianprops={"color": "coral"},
     #ax=ax,)
 
+    #expeirmental
     plt1=sns.pointplot(data=tobox_joined, x='time_str', y='cld_top' ,dodge=True, join=False, linewidth=0.1,color='red',markers=['*'],markerssize=[0.2] ,errorbar=None,ci=None,line_kws={"alpha": 0.5},scatter_kws={"alpha": 0.5})    # markers)#3, notch=False, showcaps=False, width=0.5,linewidth='1',
     plt2=sns.pointplot(data=tobox_joined, x='time_str', y='cld_base' ,dodge=True, join=False, linewidth=0.1,color='blue',markers=['v'] ,errorbar=None,ci=None)#
+
+    tobox_joined['time_str'] = tobox_joined['time_str'].str.replace(':00', '', regex=False).astype(int)
 
     sns.boxplot(data=tobox_joined, x='time_str', y='ZCBMIN' ,palette='Blues', notch=False, showcaps=False, width=0.5,linewidth='1',
     #sns.boxplot(data=toboxall, x='time_str', y='ZCB',palette='Blues', notch=False, showcaps=False, width=0.5,linewidth='1',
     flierprops={"marker": "x"},
     #boxprops={"facecolor": (.4, .6, .8, .5)},
-    medianprops={"color": "coral"},)
+    medianprops={"color": "coral"},
+    ax=ax,
+)
 
     sns.boxplot(data=tobox_joined, x='time_str', y='ZCTMAX' ,palette='Reds' , notch=False, showcaps=False, width=0.5,linewidth='1',
     #sns.boxplot(data=toboxall, x='time_str', y='ZCT',palette='Reds' , notch=False, showcaps=False, width=0.5,linewidth='1',
-    flierprops={"marker": "x"},
+    flierprops={"marker": "+"},
     #boxprops={"facecolor": (.4, .6, .8, .5)},
-    medianprops={"color": "coral"},)
+    medianprops={"color": "coral"},
+    ax=ax,
+    )
+
 
 
     # Adjust transparency of lines and markers
+    #expeirmental
     plt.setp(plt1.collections, alpha=0.3)  # For markers
-    #plt.setp(plt1.lines, alpha=0.5)      # For lines
+    plt.setp(plt1.lines, alpha=0.5)      # For lines
 
     #ax.xaxis_date()
 
@@ -875,7 +887,11 @@ def mean_box_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],
     ax.yaxis.set_major_locator(plt.MultipleLocator(1.0))
 
 
-    ax=fown.label_plots(toboxall['time'],ax,leg_locu,explabel1u,explabel2u,tama)
+    #ax=fown.label_plots(toboxall['time'],ax,leg_locu,explabel1u,explabel2u,tama)
+    if leg_locu[3][1]:
+        plt.xlabel(r'%s'%(leg_locu[3][0]), fontsize=tama) 
+    if leg_locu[4][1]:
+       plt.ylabel(r'%s'%(leg_locu[4][0]), fontsize=tama) 
 
     # Define custom colors and labels for the legend
     colors = ['lightblue','lightcoral' ]
@@ -891,7 +907,16 @@ def mean_box_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],
     # Add the custom legend
     ax.legend(handles=patches, frameon=False, fontsize=tama)
 
+    #ax.xaxis_date()
+    #date_form = mdates.DateFormatter("%H" )
+    #ax.xaxis.set_major_formatter(date_form)
+
+    #formatter = ticker.StrMethodFormatter("{%d}")
+    #ax.xaxis.set_major_formatter(formatter)
+
+
     plt.grid(True, axis="y", linestyle="--", alpha=0.6)
+    plt.grid(True, axis="x", linestyle="--", alpha=0.6)
 
 
     fig_label='les_box_cloud_plot'+'_'+var+'_'+key
@@ -907,10 +932,10 @@ def mean_box_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],
 
     return 
 
-
-def two_dimensional_exps_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],alt=[],contour=[],var_to=[],color=[],leg_loc=[],show=[],temporal=None):
+def two_dimensional_exps_sam_xr_ghost(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],alt=[],contour=[],var_to=[],color=[],leg_loc=[],show=[],temporal=None,save=True,ghost=None):
 
     
+    if ghost is None: ghost = []
 
     k=0
     for ex in exp:
@@ -967,18 +992,35 @@ def two_dimensional_exps_sam_xr(exp,variables,date,name=[],explabel1=[],explabel
             #print(leg_locu[5][0])
             if(leg_locu[5][0]):
 
-                figs,axis=fown.base_top_cloud(figs,axis,ex)
+                if ghost:
 
-            if not key:
+                    figs,axis=fown.base_top_cloud(figs,axis,ex,['gray','gray','gray'],leg_locu[5][1])
 
-                figs.savefig('%s/vertical_2d_%s.pdf'%(pars.out_fig,fig_label),bbox_inches='tight',dpi=200, format='pdf')
-                print(key)
-                print('%s/vertical_2d_%s.pdf'%(pars.out_fig,fig_label))
+                    
 
-            else:
-                figs.savefig('%s/vertical_2d_%s_%s.pdf'%(pars.out_fig,fig_label,key),bbox_inches='tight',dpi=200, format='pdf')
-                print('else',key)
-                print('%s/vertical_2d_%s_%s.pdf'%(pars.out_fig,fig_label,key))
+                    #figs,axis=fown.base_top_cloud_ghost(figs,axis,ex,['gray','gray','gray'])
+                    #figs,axis=fown.base_top_cloud(figs,axis,ex,[False,'gray','gray'],leg_locu[5][1])
+                    #figs,axis=fown.base_top_cloud(figs,axis,ghost,['orange','orange','orange'],leg_locu[5][1])
+                    figs,axis=fown.base_top_cloud(figs,axis,ghost,['purple','purple','purple'],leg_locu[5][1])
+
+
+                else:
+
+                    #figs,axis=fown.base_top_cloud(figs,axis,ex,['lime','lime','gray'])
+                    figs,axis=fown.base_top_cloud(figs,axis,ex,['gray','gray','gray'],leg_locu[5][1])
+
+            if save:
+
+                if not key:
+
+                    figs.savefig('%s/vertical_2d_ghost_%s.pdf'%(pars.out_fig,fig_label),bbox_inches='tight',dpi=200, format='pdf')
+                    print(key)
+                    print('%s/vertical_2d_%s.pdf'%(pars.out_fig,fig_label))
+
+                else:
+                    figs.savefig('%s/vertical_2d_%s_%s.pdf'%(pars.out_fig,fig_label,key),bbox_inches='tight',dpi=200, format='pdf')
+                    print('else',key)
+                    print('%s/vertical_2d_%s_%s.pdf'%(pars.out_fig,fig_label,key))
 
 
 
@@ -994,7 +1036,111 @@ def two_dimensional_exps_sam_xr(exp,variables,date,name=[],explabel1=[],explabel
 
     return 
 
-def two_dimensional_diff_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],alt=[],contour=[],var_to=[],color=[],leg_loc=[],show=[]):
+
+def two_dimensional_exps_sam_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],key=[],alt=[],contour=[],var_to=[],color=[],leg_loc=[],show=[],temporal=None,save=True):
+
+    
+
+    k=0
+    for ex in exp:
+
+        print("___________________")
+        print("__%s__"%(ex.name))
+        print("___________________")
+
+        #date_format = '%Y%m%d%H%M%S'
+        date_format = '%Y-%m-%dT%H'
+        datei=dt.datetime.strptime(date[k][0], date_format)
+        datef=dt.datetime.strptime(date[k][1], date_format)
+
+        time1 = np.datetime64(date[k][0]) 
+        time2 = np.datetime64(date[k][1])
+
+        ni,nf=down.data_n(time1,time2,ex.time.values) 
+
+        tovar= ex.sel(time=slice(ex.time[ni],ex.time[nf]))
+
+        #if name:
+        name    =   str(ex.name.values)#+'_'+dates[0]
+
+        print("_les__%s__"%(name))
+
+        j=0
+        for var in variables:
+
+        
+            print("___________________")
+            print("%s"%(var))
+            print("___________________")
+
+            #Its no necessary to calculate de height
+            z=ex.z.values
+
+            hours=[datei,datef]
+
+            contour,alt,var_to,color,exl1,exl2,leg_locu,show=df.default_values_sam_2d_kj(ex,var,z,contour,alt,var_to,color,explabel1,explabel2,leg_loc,show,k,j)
+            
+
+            data=tovar[var][:,:]*var_to[j]
+
+
+            fig_label='les_'+name+'_'+var
+
+
+            figs,axis  = fown.d2_plot_im_diff(data,z,alt[j],contour[j],color[j],[fig_label,exl1,exl2],leg_locu,hours=hours)
+
+            if temporal:
+
+                figs,axis,axis2=fown.temporal(figs,axis,tovar,temporal[1::])
+
+            #print(leg_locu[5][0])
+            if(leg_locu[5][0]):
+
+                #figs,axis=fown.base_top_cloud(figs,axis,ex,['gray','orange','magenta'])
+                figs,axis=fown.base_top_cloud(figs,axis,ex,['gray','gray','gray'],leg_locu[5][1])
+
+
+            #print(pars.out_fig,fig_label)
+            #exit()
+
+            if save:
+
+                if not key:
+
+
+                    figs.savefig('%s/vertical_2d_%s.pdf'%(pars.out_fig,fig_label),bbox_inches='tight',dpi=200, format='pdf')
+                    print(key)
+                    print('%s/vertical_2d_%s.pdf'%(pars.out_fig,fig_label))
+
+                    #plt.show()
+                    #exit()
+
+                else:
+                    figs.savefig('%s/vertical_2d_%s_%s.pdf'%(pars.out_fig,fig_label,key),bbox_inches='tight',dpi=200, format='pdf')
+                    print('else',key)
+                    print('%s/vertical_2d_%s_%s.pdf'%(pars.out_fig,fig_label,key))
+
+
+
+            j+=1
+
+        k+=1
+
+    if show[0]:
+
+        plt.show()
+    
+    plt.close('all')
+
+    return 
+
+#Inter: do intepolation to make the subtraction 
+#Reference: use a refecente time to do the interpolation 
+
+def two_dimensional_diff_xr(exp,variables,date,name=[],explabel1=[],explabel2=[],alt=[],contour=[],var_to=[],color=[],leg_loc=[],show=[],Inter=False,date0=None,Reference=False,save=True):
+
+    if date0==None:
+        date0=[]
 
     k=0
     for ex in exp:
@@ -1007,17 +1153,53 @@ def two_dimensional_diff_xr(exp,variables,date,name=[],explabel1=[],explabel2=[]
 
         #date_format = '%Y%m%d%H%M%S'
         date_format = '%Y-%m-%dT%H'
+
         datei=dt.datetime.strptime(date[k][0], date_format)
         datef=dt.datetime.strptime(date[k][1], date_format)
 
         time1 = np.datetime64(date[k][0]) 
         time2 = np.datetime64(date[k][1])
 
+
+        if Reference:
+
+        ############
+            month_0=1
+            day_0=1
+            year_0=2026
+
+            if date0:  
+                date0 = date0
+            else:
+                date0 =[1,1,datenow.year]
+
+            #print(ex[0].time)
+            #print(ex[1].time)
+            #exit()
+
+            ex[0]['time']=down.data_to_reference_vector(ex[0].time,date0)
+            ex[1]['time']=down.data_to_reference_vector(ex[1].time,date0)
+
+
         ni,nf=down.data_n(time1,time2,ex[0].time.values) 
         tovar1= ex[0].sel(time=slice(ex[0].time[ni],ex[0].time[nf]))
 
         ni,nf=down.data_n(time1,time2,ex[1].time.values) 
         tovar2= ex[1].sel(time=slice(ex[1].time[ni],ex[1].time[nf]))
+
+        if Inter:
+
+            tovar2 = tovar2.interp(time=tovar1.time, method="nearest")
+            tovar2 = tovar2.interp(z=tovar1.z, method="nearest")
+
+        #print(tovar1.time[0:10])
+        #print(tovar2.time[0:10])
+        #print(B_interp.time[0:10])
+        #exit()
+
+        #print(ex[0].time[ni],ex[0].time[nf])
+        #print(ex[1].time[ni],ex[1].time[nf])
+        #exit()
 
         j=0
         for var in variables:
@@ -1033,6 +1215,14 @@ def two_dimensional_diff_xr(exp,variables,date,name=[],explabel1=[],explabel2=[]
 
             contour,alt,var_to,color,exl1,exl2,leg_locu,show=df.default_values_sam_2d_kj(ex[0],var,z,contour,alt,var_to,color,explabel1,explabel2,leg_loc,show,k,j)
 
+
+            if var=='WOBS':
+
+                #to searh the Set all positive values to zero, work contrarily 
+                tovar1[var] = tovar1[var].where(tovar1[var] < 0, 0)
+                tovar2[var] = tovar2[var].where(tovar2[var] < 0, 0)
+
+
             data=(tovar1[var][:,:]-tovar2[var][:,:])*var_to[j]
 
             fig_label='diff_'+name+'_'+var
@@ -1041,9 +1231,13 @@ def two_dimensional_diff_xr(exp,variables,date,name=[],explabel1=[],explabel2=[]
 
             if(leg_locu[5][0]):
 
-                figs,axis=fown.base_top_cloud(figs,axis,ex[0])
-
-                plt.savefig('%s/vertical_2d_%s.pdf'%(pars.out_fig,fig_label),bbox_inches='tight',dpi=200, format='pdf')
+                figs,axis=fown.base_top_cloud(figs,axis,ex[0],['lime','green','green'],leg_locu[5][1])
+                                                                                        
+                #figs,axis=fown.base_top_cloud(figs,axis,ex[1],['orangered','orange','orange'])
+                figs,axis=fown.base_top_cloud(figs,axis,ex[1],['purple','indigo','indigo'],leg_locu[5][2])
+    
+                if save:
+                    plt.savefig('%s/vertical_2d_%s.pdf'%(pars.out_fig,fig_label),bbox_inches='tight',dpi=200, format='pdf')
 
 
             j+=1

@@ -11,7 +11,7 @@ import  sam_python.campain_data        as cd
 
 import  sam_python.plotparameters      as pp
 
-from    files_direction                import file_fig, file_temporal,tplot_size
+###from    files_direction                import file_fig, file_temporal,tplot_size
 
 ###############################################
 # Python standard library datetime  module
@@ -51,6 +51,8 @@ import  sam_python.data_own       as down
 
 import importlib
 
+from   datetime import datetime
+
 import subprocess, sys
 
 #to cp the parametres defaul 
@@ -67,10 +69,34 @@ pars=importlib.import_module('.Parameters_default','sam_python',)
 #day0=0
 #data = down.data_to_reference(ex.data,day0,days[0][4])
 
-def temporal_plot_exp_var_xr(exp,date=[],variables=[],var_to=[],explabel1=[],days=[],explabel2=[],alt=[],plot_def=[],color=[],show=[],save=None):
+def temporal_plot_exp_var_xr(exp,date=[],variables=[],var_to=[],explabel1=[],days=[],explabel2=[],lim=[],alt=[],lev=None,plot_def=[],color=[],date0=None,obs=None,date_obs=None,var_obs=None,var_to_obs=None,line=None,show=[],save=None,obs2=None,date_obs2=None,var_obs2=None,var_to_obs2=None):
+
 
     if save==None:
         save=[]
+
+    if lev==None:
+        lev=[]
+
+    if line==None:
+        line=[]
+
+    if date0==None:
+        date0=[]
+    
+    if obs is None:
+        obs=[]
+
+    if obs2 is None:
+        obs2=[]
+
+    date_format = '%Y-%m-%dT%H:%M'
+
+    agora = datetime.now()
+    # Formata e imprime
+    data_formatada = agora.strftime(date_format)
+    datenow=dt.datetime.strptime(data_formatada, date_format)
+
 
     j=0
     for var in variables:
@@ -93,9 +119,10 @@ def temporal_plot_exp_var_xr(exp,date=[],variables=[],var_to=[],explabel1=[],day
 
         k=0
         label=''
+
         for ex in exp:
 
-            limu,altu,var_tou,coloru,explabel1u,explabel2u,plot_defu,showu=df.default_values_1d_new(ex,var,date,alt,var_to,color,explabel1,explabel2,plot_def,show,k,j)
+            limu,altu,var_tou,coloru,explabel1u,explabel2u,plot_defu,showu=df.default_values_1d_new(ex,var,lim,alt,var_to,color,explabel1,explabel2,plot_def,show,k,j)
 
             print("___________________")
             print("__%s__"%(ex.name))
@@ -107,38 +134,123 @@ def temporal_plot_exp_var_xr(exp,date=[],variables=[],var_to=[],explabel1=[],day
             print("_temporal__%s__"%(name))
 
             #date_format = '%Y%m%d%H%M%S'
-            date_format = '%Y-%m-%dT%H'
+
             datei=dt.datetime.strptime(date[k][0], date_format)
             datef=dt.datetime.strptime(date[k][1], date_format)
     
             time1 = np.datetime64(date[k][0]) 
             time2 = np.datetime64(date[k][1])
     
+
             ni,nf=down.data_n(time1,time2,ex.time.values) 
-    
+
+
             tovar= ex.sel(time=slice(ex.time[ni],ex.time[nf-1]))
+
+            if lev:
+
+                try: 
+                    tovar= ex.sel(z=lev,method='nearest')
+                except: 
+                    tovar=tovar
 
             time11   =   tovar.time
 
-            time22=down.data_to_reference_vector(time11,1,1,2025)
-    
+
+            if date0:  
+                date0 = date0
+            else:
+                date0 =[1,1,datenow.year]
+
+
+            time22=down.data_to_reference_vector(time11,date0)
+
             data=tovar[var]*var_tou
 
-            ax.grid(axis='y',linewidth=1.0,alpha=0.7,dashes=[1,1,0,0] )
-            ax.grid(axis='x',linewidth=1.0,alpha=0.7,dashes=[1,1,0,0] )
+            #ax.grid(axis='y',linewidth=1.0,alpha=0.6,linestyle='--')#,dashes=[1,1,0,0] )
+            ax.grid(axis='x',color = 'gray',linewidth=0.5,alpha=0.5,dashes=[1,1,0,0]  )
+            ax.grid(axis='y',color = 'gray',linewidth=0.5,alpha=0.5,dashes=[1,1,0,0]  )
 
-            plt.plot(time22,data,label='%s'%(explabel1u),color=coloru,linewidth=1.0,alpha=1.0)
+            plt.grid(color = 'gray',linewidth=0.5,alpha=0.5,dashes=[1,1,0,0] )
 
+            #"""
+            if line:
+
+                plt.plot(time22,data,label='%s'%(explabel1u),color=coloru,linewidth=1.5,alpha=1.0,dashes=line[k])
+
+            else:
+
+                plt.plot(time22,data,label='%s'%(explabel1u),color=coloru,linewidth=1.5,alpha=1.0)
+
+            #"""
             k+=1
 
             label=label+'_'+"%s"%(name)
 
-        fig,ax=plot_temporal_axis(fig,ax,ex,altu,limu,plot_defu)
+        if obs:
+    
+            time1_obs = np.datetime64(date_obs[j][0]) 
+            time2_obs = np.datetime64(date_obs[j][1])
 
-        #label="%s_%s"%(name,var)
+            ni_obs,nf_obs=down.data_n(time1_obs,time2_obs,obs.time.values) 
+
+            tovar_obs = obs.sel(time=slice(obs.time[ni_obs],obs.time[nf_obs-1]))
+
+            time_obs  =   tovar_obs.time
+
+            if date0:  
+                date0 = date0
+            else:
+                date0 =[1,1,datenow.year]
+
+            #print(time_obs)
+            #exit()
+            #print('xx',var_obs[j])
+            #print(data_obs[:])
+
+            time_obs=down.data_to_reference_vector(time_obs,date0)
+
+            data_obs=tovar_obs[var_obs[j]]*var_to_obs[j]
+
+            try:
+                plt.plot(time_obs,data_obs[:,0,0],label='%s'%('Radar'),color='black',linewidth=1.5,alpha=1.0)#,dashes=line[k])
+            except:
+                plt.plot(time_obs,data_obs[:],label='%s'%('Radar'),color='black',linewidth=1.5,alpha=1.0)#,dashes=line[k])
+        ###########################
+        if obs2:
+    
+            time1_obs = np.datetime64(date_obs[j][0]) 
+            time2_obs = np.datetime64(date_obs[j][1])
+
+            ni_obs,nf_obs=down.data_n(time1_obs,time2_obs,obs2.time.values) 
+
+            tovar_obs2 = obs2.sel(time=slice(obs2.time[ni_obs],obs2.time[nf_obs]))
+
+            time_obs2  =   tovar_obs2.time
+
+            if date0:  
+                date0 = date0
+            else:
+                date0 =[1,1,datenow.year]
+
+
+            time_obs2=down.data_to_reference_vector(time_obs2,date0)
+
+            data_obs2=tovar_obs2[var_obs2[j]]*var_to_obs2[j]
+
+            try:
+                plt.plot(time_obs2,data_obs2[:,0,0],label='%s'%('TRMM'),color='black',linewidth=1.5,alpha=1.0,dashes=[1,1,0,0] )
+            except:
+                plt.plot(time_obs2,data_obs2[:],label='%s'%('TRMM'),color='black',linewidth=1.5,alpha=1.0,dashes=[1,1,0,0])
+        ###########################
+
+        fig,ax=plot_temporal_axis(fig,ax,ex,altu,limu,plot_defu,date0)
+
+        label="%s_%s"%(name,var)
+
         label=label+"_%s"%(var)
 
-        if save[0]:
+        if save:
                 try: 
 
                     label=save[1]+"_%s"%(var)
@@ -534,7 +646,7 @@ def temporal_plot(fig,ax,data,var,k=0,exp_label=0,color=0):
     return fig,ax
 
 
-def plot_temporal_axis(fig,ax,ex,alt,lim,plot_def):
+def plot_temporal_axis(fig,ax,ex,alt,lim,plot_def,date0):
 
 
     #plot_def
@@ -556,7 +668,7 @@ def plot_temporal_axis(fig,ax,ex,alt,lim,plot_def):
 
 
     #d1=dt.datetime(plot_def[1][1][0],plot_def[1][1][1],plot_def[1][1][2],plot_def[1][1][3])
-    date_format = '%Y-%m-%dT%H'
+    date_format = '%Y-%m-%dT%H:%M'
     #d1=dt.datetime.strptime(plot_def[1][1], date_format)
     d1 = np.datetime64(plot_def[1][1]) 
     #d1=dt.datetime(plot_def[1][1],plot_def[1][1],plot_def[1][2],plot_def[1][3])
@@ -564,14 +676,25 @@ def plot_temporal_axis(fig,ax,ex,alt,lim,plot_def):
     plt.xlabel(r'%s'%(plot_def[0][0])) 
     plt.ylabel(r'%s'%(plot_def[0][1])) 
 
-    lim1 = np.datetime64(lim[0]) 
-    lim2 = np.datetime64(lim[1]) 
+    #lim1 = np.datetime64(lim[0]) 
+    #lim2 = np.datetime64(lim[1]) 
+    # Converte especificando o formato exato
+
+    lim1=pd.to_datetime(lim[0], format=date_format)
+    lim2=pd.to_datetime(lim[1], format=date_format)
+
+    #lim1 = lim1.strftime(date_format)
+    #lim2 = lim2.strftime(date_format)
+
+    lim1 = down.data_to_reference(lim1,date0)
+    lim2 = down.data_to_reference(lim2,date0)
 
     plt.axis( [lim1,lim2,alt[0],alt[1]])
 
     ax.text(d1,plot_def[1][2], r'%s'%(plot_def[1][0]), fontsize=8, color='black')
 
-    ax.legend(frameon=plot_def[2][0],loc=plot_def[2][1])
+    if plot_def[2][0]:
+        ax.legend(frameon=False,loc=plot_def[2][1])
 
 
     return fig,ax

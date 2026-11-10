@@ -3,19 +3,11 @@ import cartopy.crs as ccrs
 MODEL='MPAS'
 
 plotdef='2d'
+
 #Latex width 
-wf=0.33
+wf=0.50
 hf=1.0
 cmmais=0.0
-#plot size of the figures
-#cmmais are the cm to put the cbbar  without modified the size of the fig
-projection=ccrs.PlateCarree(central_longitude=180.0, globe=None)
-#############plot formated
-# make the map global rather than have it zoom in to
-# the extents of any plotted data
-###################################3
-#skip poitnt in vector plot
-npp=10
 
 extend='both'
 
@@ -23,10 +15,15 @@ egeon='/pesq'
 
 UTC=-4
 
-path=egeon+'/dados/bamc/jhonatan.aguirre/git_repositories/MPAS_iops/Madeleine' 
+#path =egeon+"/dados/bamc/jhonatan.aguirre/git_repositories/PAPER3_SHCA" 
+#path =egeon+"/dados/bamc/jhonatan.aguirre/git_repositories/PAPER3_SHCA" 
+path =egeon+"/dados/bamc/jhonatan.aguirre/git_repositories/PAPER3_SHCA" 
 
 # Out figure folder
-out_fig=path+'/document/fig'
+#out_fig=path+'/document/fig'
+#out_fig=path+'/COMPARACAO/document/fig'
+#out_fig=path+'/comparison_paper/fig_new'
+out_fig=path+'/comparison_paper/version5_atmospheric_research/figs'
 
 #out python nc files
 out_files= path+'/python_nc'
