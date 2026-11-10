@@ -14,6 +14,8 @@ def plotsize(para_name,wf=1,hf=1,cmmais=0):
 
     mpl.rcParams.update(params)
 
+    return params
+
 
 def get_figsize(columnwidth, wf=0.5, hf=(5.**0.5-1.0)/2.0, cmmais=0.0):
 
@@ -138,6 +140,23 @@ def parameters(name,figsize):
              	  'legend.fontsize' : 'small',
              	  'axes.labelsize'  : 'x-small',
              	  'axes.labelweight': '200',
+             	  'xtick.labelsize' : 'small',
+             	  'ytick.labelsize' : 'small',
+                  'xtick.direction' : 'out',   
+        }
+
+    if name=='mapa2':
+
+        parame= {
+             	  'figure.figsize'  : figsize,
+            	  'font.family'     : 'serif',
+            	  'font.sans-serif' : 'Helvetica',
+                  'font.size'       : 9,
+            	  'font.weight'     : '300',
+            	  'lines.linewidth' :  1.2,
+             	  'legend.fontsize' : 'small',
+             	  'axes.labelsize'  : 'small',
+             	  'axes.labelweight': '300',
              	  'xtick.labelsize' : 'small',
              	  'ytick.labelsize' : 'small',
                   'xtick.direction' : 'out',   

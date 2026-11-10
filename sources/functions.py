@@ -3,6 +3,150 @@ import xarray as xr
 import datetime as dt
 import pandas as pd
 import matplotlib.pyplot as plt
+import   sources.cartopyplot   as ma 
+
+import importlib
+
+import subprocess, sys
+# Function with the definition of differents projetions
+
+
+#to cp the parametres defaul 
+subprocess.run('cp Parameters_default.py /pesq/dados/bamc/jhonatan.aguirre/git_repositories/MAPS_python/sam_python/', shell = True, executable="/bin/bash")
+
+#used the user parameter to plot(plotparameter.py) if para:
+#pars=__import__('source.Parameters_default',globals())
+pars=importlib.import_module('.Parameters_default','sam_python',)
+
+date_format = '%Y%m%d%H%M'
+
+
+def accomulate(exp,variables,dates=None,lats=None,lons=None,lim=None,var2=None,show=None,step_era5=False): 
+
+    di=dt.datetime.strptime(dates[0], date_format)
+    df=dt.datetime.strptime(dates[1], date_format)
+
+
+    if dates==None:
+        dates=[]
+
+    if lats==None:
+        lats=[]
+
+    if lons==None:
+        lons=[]
+
+
+    k=0
+    accomulate=[]#np.zeros(len(exp))
+    for ex in exp:
+
+        j=0
+        for var in variables[k]:
+
+            toacomm = ex
+
+
+            if dates:
+                toacomm = toacomm.sel(time=slice(di,df))
+
+            try:
+                toacomm.latitude
+            except:
+                toacomm=ma.latitude_lat(toacomm)
+
+            if lats:
+                toacomm = toacomm.sel(latitude=slice(lats[0],lats[1]))
+
+            try:
+                toacomm.longitude
+            except:
+                toacomm=ma.longitude_lon(toacomm)
+
+            if lons:
+
+                toacomm = toacomm.sel(longitude=slice(lons[0],lons[1]))
+
+
+            name    =   str(ex.name.values)+'_'+var
+            print("__%s__"%(name))
+
+
+            i=0
+            accom=0
+            for d in toacomm.time: 
+
+                accom = toacomm[var][i]+accom
+
+                i+=1
+
+            #print(var2[k][j],k,j,'x')
+            accom=accom*var2[k][j]
+
+
+            j+=1
+
+            accomulate.append(accom)
+        k+=1
+
+    return accomulate
+
+def mean(exp,variables,dates=None,lats=None,lons=None,lim=None,var2=None,show=None,step_era5=False): 
+
+    di=dt.datetime.strptime(dates[0], date_format)
+    df=dt.datetime.strptime(dates[1], date_format)
+
+    if dates==None:
+        dates=[]
+
+    if lats==None:
+        lats=[]
+
+    if lons==None:
+        lons=[]
+
+
+    k=0
+    mean=[]
+    for ex in exp:
+
+        j=0
+        for var in variables[k]:
+
+            toacomm = ex
+
+            if dates:
+                toacomm = toacomm.sel(time=slice(di,df))
+
+            try:
+                toacomm.latitude
+            except:
+                toacomm=ma.latitude_lat(toacomm)
+
+            if lats:
+                toacomm = toacomm.sel(latitude=slice(lats[0],lats[1]))
+
+            try:
+                toacomm.longitude
+            except:
+                toacomm=ma.longitude_lon(toacomm)
+
+            if lons:
+
+                toacomm = toacomm.sel(longitude=slice(lons[0],lons[1]))
+
+            name    =   str(ex.name.values)+'_'+var
+            print("__%s__"%(name))
+
+            mean_1  = toacomm[var].mean(axis=0)
+
+            j+=1
+
+        mean.append(mean_1)
+
+        k+=1
+
+    return mean
 
 
 def statist(data,dates):
@@ -25,7 +169,6 @@ def statist(data,dates):
         print(d)
 
         tomean = data.sel(Time=[d],method='nearest')
-
         for var in variables:
 
             lat  = tomean[var].mean(dim='latitude') 
